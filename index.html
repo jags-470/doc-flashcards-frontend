@@ -150,7 +150,7 @@
       cardsContainer.innerHTML = '<div class="loading">🤖 AI is generating your flashcards...</div>';
 
       try {
-        const res = await fetch('https://doc-flashcards-backend.onrender.com/api/generate-flashcards', {
+        const res = await fetch('http://localhost:3000', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ document: text })
