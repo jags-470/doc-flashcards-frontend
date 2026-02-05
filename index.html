@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Document Flashcards</title>
+  <style>
+    body { 
+      font-family: Arial, sans-serif; 
+      max-width: 900px; 
+      margin: 20px auto; 
+      padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    }
+    h1 { 
+      color: #333; 
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    textarea { 
+      width: 100%; 
+      padding: 15px; 
+      border: 2px solid #ddd; 
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      resize: vertical;
+    }
+    textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    #generateBtn { 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white; 
+      border: none; 
+      padding: 15px 30px; 
+      font-size: 16px; 
+      border-radius: 8px; 
+      cursor: pointer;
+      width: 100%;
+      margin-top: 15px;
+      font-weight: bold;
+      transition: transform 0.2s;
+    }
+    #generateBtn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+    #generateBtn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .card { 
+      border: 2px solid #e0e0e0; 
+      padding: 20px; 
+      margin: 20px 0; 
+      border-radius: 12px;
+      background: #fafafa;
+      transition: all 0.3s;
+    }
+    .card:hover {
+      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+    .card strong {
+      color: #667eea;
+      font-size: 18px;
+    }
+    .options { 
+      margin-top: 15px;
+    }
+    .options button { 
+      display: block; 
+      margin: 8px 0; 
+      padding: 12px; 
+      width: 100%;
+      border: 2px solid #ddd;
+      background: white;
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: left;
+      font-size: 15px;
+      transition: all 0.2s;
+    }
+    .options button:hover {
+      border-color: #667eea;
+      background: #f0f4ff;
+    }
+    .options button.correct { 
+      background-color: #c8f7c5;
+      border-color: #4caf50;
+      font-weight: bold;
+    }
+    .options button.wrong { 
+      background-color: #f7c5c5;
+      border-color: #f44336;
+    }
+    .answer { 
+      margin-top: 10px; 
+      color: #666;
+      font-size: 14px;
+      font-style: italic;
+    }
+    .loading {
+      text-align: center;
+      color: #667eea;
+      font-size: 18px;
+      margin: 30px 0;
+    }
+    h2 {
+      color: #333;
+      border-bottom: 3px solid #667eea;
+      padding-bottom: 10px;
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📚 Document Flashcards Generator</h1>
+    
+    <textarea id="docText" rows="10" placeholder="Paste your document text here...\n\nExample: Upload content about Salesforce security, JavaScript concepts, or any topic you want to study."></textarea>
+    <button id="generateBtn">Generate Q&A Flashcards</button>
+
+    <h2>Flashcards</h2>
+    <div id="cardsContainer"></div>
+  </div>
+
+  <script>
+    const generateBtn = document.getElementById('generateBtn');
+    const docText = document.getElementById('docText');
+    const cardsContainer = document.getElementById('cardsContainer');
+
+    generateBtn.onclick = async () => {
+      const text = docText.value.trim();
+      if (!text) {
+        alert('Please paste some document text first.');
+        return;
+      }
+      
+      generateBtn.disabled = true;
+      generateBtn.textContent = 'Generating...';
+      cardsContainer.innerHTML = '<div class="loading">🤖 AI is generating your flashcards...</div>';
+
+      try {
+        const res = await fetch('https://YOUR-BACKEND-URL/api/generate-flashcards', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ document: text })
+        });
+        
+        if (!res.ok) {
+          throw new Error('Failed to generate flashcards');
+        }
+        
+        const data = await res.json();
+        renderCards(data.flashcards || []);
+      } catch (e) {
+        console.error(e);
+        cardsContainer.innerHTML = '<div class="card" style="border-color: #f44336;">❌ Error generating flashcards. Please check your backend URL and try again.</div>';
+      } finally {
+        generateBtn.disabled = false;
+        generateBtn.textContent = 'Generate Q&A Flashcards';
+      }
+    };
+
+    function renderCards(cards) {
+      if (!cards.length) {
+        cardsContainer.innerHTML = '<div class="card">No flashcards generated. Try with more detailed content.</div>';
+        return;
+      }
+      cardsContainer.innerHTML = '';
+      cards.forEach((card, idx) => {
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.innerHTML = `
+          <div><strong>Q${idx+1}:</strong> ${card.question}</div>
+          <div class="options"></div>
+          <div class="answer">Correct answer: ${card.correct}</div>
+        `;
+        const optionsDiv = div.querySelector('.options');
+        card.options.forEach(opt => {
+          const btn = document.createElement('button');
+          btn.textContent = opt;
+          btn.onclick = () => {
+            // Disable all buttons after one is clicked
+            optionsDiv.querySelectorAll('button').forEach(b => b.disabled = true);
+            
+            if (opt === card.correct) {
+              btn.classList.add('correct');
+            } else {
+              btn.classList.add('wrong');
+              // Also highlight the correct answer
+              optionsDiv.querySelectorAll('button').forEach(b => {
+                if (b.textContent === card.correct) {
+                  b.classList.add('correct');
+                }
+              });
+            }
+          };
+          optionsDiv.appendChild(btn);
+        });
+        cardsContainer.appendChild(div);
+      });
+    }
+  </script>
+</body>
+</html>
