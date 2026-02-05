@@ -126,7 +126,7 @@
   <div class="container">
     <h1>📚 Document Flashcards Generator</h1>
     
-    <textarea id="docText" rows="10" placeholder="Paste your document text here...\n\nExample: Upload content about Salesforce security, JavaScript concepts, or any topic you want to study."></textarea>
+    <textarea id="docText" rows="10" placeholder="Paste your document text here..."></textarea>
     <button id="generateBtn">Generate Q&A Flashcards</button>
 
     <h2>Flashcards</h2>
@@ -150,7 +150,7 @@
       cardsContainer.innerHTML = '<div class="loading">🤖 AI is generating your flashcards...</div>';
 
       try {
-        const res = await fetch('https://YOUR-BACKEND-URL/api/generate-flashcards', {
+        const res = await fetch('https://doc-flashcards-backend.onrender.com/api/generate-flashcards', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ document: text })
