@@ -150,7 +150,7 @@
       cardsContainer.innerHTML = '<div class="loading">🤖 AI is generating your flashcards...</div>';
 
       try {
-        const res = await fetch('http://localhost:3000', {
+        const res = await fetch('http://localhost:3000/api/generate-flashcards', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ document: text })
