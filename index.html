@@ -4,122 +4,127 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Document Flashcards</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
   <style>
-    body { 
-      font-family: Arial, sans-serif; 
-      max-width: 900px; 
-      margin: 20px auto; 
-      padding: 20px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    :root{
+      --bg-1: #f6f9ff;
+      --bg-2: #eef6ff;
+      --accent-1: #3b82f6; /* blue */
+      --accent-2: #60a5fa; /* lighter blue */
+      --muted: #6b7280;
+      --card-bg: rgba(255,255,255,0.85);
+      --glass-border: rgba(99,102,241,0.08);
+    }
+
+    html,body{height:100%;}
+    body {
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+      max-width: 980px;
+      margin: 28px auto;
+      padding: 28px;
+      background: linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 60%);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      color: #0f172a;
       min-height: 100vh;
     }
+
     .container {
-      background: white;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+      background: var(--card-bg);
+      padding: 36px;
+      border-radius: 14px;
+      box-shadow: 0 12px 40px rgba(16,24,40,0.08);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(6px) saturate(100%);
+      transition: box-shadow 240ms ease, transform 240ms ease;
     }
-    h1 { 
-      color: #333; 
+
+    .container.drop-target{ box-shadow: 0 18px 50px rgba(59,130,246,0.12); transform: translateY(-3px); }
+
+    h1 {
+      color: #07204a;
       text-align: center;
-      margin-bottom: 30px;
+      margin-bottom: 18px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
     }
-    textarea { 
-      width: 100%; 
-      padding: 15px; 
-      border: 2px solid #ddd; 
-      border-radius: 8px;
-      font-size: 14px;
-      font-family: inherit;
-      resize: vertical;
-    }
-    textarea:focus {
-      outline: none;
-      border-color: #667eea;
-    }
-    #generateBtn { 
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white; 
-      border: none; 
-      padding: 15px 30px; 
-      font-size: 16px; 
-      border-radius: 8px; 
-      cursor: pointer;
+
+    textarea, input[type="text"], input[type="number"]{
       width: 100%;
-      margin-top: 15px;
-      font-weight: bold;
-      transition: transform 0.2s;
-    }
-    #generateBtn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-    }
-    #generateBtn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-    .card { 
-      border: 2px solid #e0e0e0; 
-      padding: 20px; 
-      margin: 20px 0; 
-      border-radius: 12px;
-      background: #fafafa;
-      transition: all 0.3s;
-    }
-    .card:hover {
-      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-    }
-    .card strong {
-      color: #667eea;
-      font-size: 18px;
-    }
-    .options { 
-      margin-top: 15px;
-    }
-    .options button { 
-      display: block; 
-      margin: 8px 0; 
-      padding: 12px; 
-      width: 100%;
-      border: 2px solid #ddd;
-      background: white;
-      border-radius: 8px;
-      cursor: pointer;
-      text-align: left;
+      padding: 14px 12px;
+      border: 1px solid rgba(15,23,42,0.06);
+      border-radius: 10px;
       font-size: 15px;
-      transition: all 0.2s;
+      color: #0f172a;
+      background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(250,252,255,0.95));
+      transition: box-shadow 180ms ease, border-color 180ms ease, transform 120ms ease;
     }
-    .options button:hover {
-      border-color: #667eea;
-      background: #f0f4ff;
+
+    textarea:focus, input[type="text"]:focus, input[type="number"]:focus{
+      outline: none;
+      border-color: rgba(59,130,246,0.45);
+      box-shadow: 0 6px 18px rgba(59,130,246,0.08);
+      transform: translateY(-1px);
     }
-    .options button.correct { 
-      background-color: #c8f7c5;
-      border-color: #4caf50;
-      font-weight: bold;
+
+    #generateBtn {
+      background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
+      color: #fff;
+      border: none;
+      padding: 14px 18px;
+      font-size: 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 14px;
+      font-weight: 600;
+      box-shadow: 0 8px 24px rgba(59,130,246,0.12);
+      transition: transform 180ms cubic-bezier(.2,.9,.2,1), box-shadow 180ms ease, opacity 120ms ease;
     }
-    .options button.wrong { 
-      background-color: #f7c5c5;
-      border-color: #f44336;
+
+    #generateBtn:hover:not(:disabled){
+      transform: translateY(-4px) scale(1.01);
+      box-shadow: 0 18px 34px rgba(59,130,246,0.14);
     }
-    .answer { 
-      margin-top: 10px; 
-      color: #666;
-      font-size: 14px;
-      font-style: italic;
+
+    #generateBtn:disabled { opacity: 0.6; cursor: not-allowed; transform:none; box-shadow: none; }
+
+    .card{
+      border-radius: 12px;
+      padding: 18px;
+      margin: 18px 0;
+      background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(248,250,255,0.98));
+      border: 1px solid rgba(15,23,42,0.03);
+      transition: transform 200ms ease, box-shadow 200ms ease;
     }
-    .loading {
-      text-align: center;
-      color: #667eea;
-      font-size: 18px;
-      margin: 30px 0;
+
+    .card:hover{ transform: translateY(-6px); box-shadow: 0 12px 30px rgba(2,6,23,0.08); }
+
+    .card strong{ color: #0b3a66; font-size: 17px; }
+
+    .options{ margin-top:12px; }
+
+    .options button{
+      display:block; margin:8px 0; padding:12px; width:100%;
+      border:1px solid rgba(15,23,42,0.06); background: #fff; border-radius:10px; text-align:left;
+      cursor:pointer; font-size:15px; transition:transform 140ms ease, box-shadow 140ms ease, background 140ms ease;
     }
-    h2 {
-      color: #333;
-      border-bottom: 3px solid #667eea;
-      padding-bottom: 10px;
-      margin-top: 40px;
-    }
+
+    .options button:hover{ transform: translateY(-2px); box-shadow: 0 8px 18px rgba(2,6,23,0.06); background: linear-gradient(90deg, rgba(59,130,246,0.05), rgba(99,102,241,0.03)); }
+
+    .options button.correct{ background: linear-gradient(90deg,#d1fae5,#bbf7d0); border-color: rgba(34,197,94,0.6); font-weight:600; }
+    .options button.wrong{ background: linear-gradient(90deg,#ffeeee,#ffdede); border-color: rgba(244,63,94,0.6); }
+
+    .answer{ margin-top:10px; color:var(--muted); font-size:14px; font-style:italic; }
+
+    .loading{ text-align:center; color:var(--accent-1); font-size:16px; margin:28px 0; }
+
+    h2{ color:#0b2545; border-bottom:3px solid rgba(59,130,246,0.08); padding-bottom:8px; margin-top:34px; }
+
+    .revealBtn{ margin-top:10px; padding:8px 12px; border-radius:10px; border:1px solid rgba(15,23,42,0.06); background:#fff; cursor:pointer; transition:transform 140ms ease, box-shadow 140ms ease; }
+    .revealBtn:hover{ transform: translateY(-2px); box-shadow: 0 8px 18px rgba(2,6,23,0.06); }
   </style>
 </head>
 <body>
@@ -127,10 +132,21 @@
     <h1>📚 Document Flashcards Generator</h1>
     
     <textarea id="docText" rows="10" placeholder="Paste your document text here..."></textarea>
+    <div style="font-size:12px;color:#666;margin-top:8px">Or drag & drop a .txt file or selected text onto the card area below.</div>
     <div style="margin:10px 0 0 0;">
       <label for="backendUrl" style="display:block;font-size:13px;margin-bottom:6px;color:#444;">Backend URL (include protocol and port):</label>
       <input id="backendUrl" type="text" value="http://localhost:3000" style="width:100%;padding:10px;border:2px solid #ddd;border-radius:8px;font-size:14px;" />
       <div style="font-size:12px;color:#666;margin-top:6px">Use the backend base URL (e.g. http://localhost:3000). If using Live Server, enable CORS on the backend.</div>
+    </div>
+    <div style="margin:10px 0 0 0;display:flex;gap:12px;align-items:center;">
+      <label for="numQuestions" style="font-size:13px;color:#444;min-width:160px;">Number of questions (max 25):</label>
+      <input id="numQuestions" type="number" value="5" min="1" max="25" style="width:100px;padding:8px;border:2px solid #ddd;border-radius:8px;font-size:14px;" />
+      <div style="font-size:12px;color:#666;">Enter how many flashcards to generate (1–25).</div>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+      <input id="fileUpload" type="file" accept=".txt,.md,.pdf" style="display:none" />
+      <button id="uploadBtn" type="button" class="revealBtn" style="margin-top:0;">📤 Upload File</button>
+      <div style="font-size:12px;color:#666;">or drag & drop a .txt/.md file.</div>
     </div>
     <button id="generateBtn">Generate Q&A Flashcards</button>
 
@@ -143,6 +159,47 @@
     const docText = document.getElementById('docText');
     const backendUrlInput = document.getElementById('backendUrl');
     const cardsContainer = document.getElementById('cardsContainer');
+    const numQuestionsInput = document.getElementById('numQuestions');
+    const fileUpload = document.getElementById('fileUpload');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const dropZone = document.querySelector('.container');
+
+    // File upload handler
+    if (uploadBtn && fileUpload) {
+      uploadBtn.onclick = () => fileUpload.click();
+      fileUpload.onchange = async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        try {
+          let text = '';
+          if (file.name.endsWith('.pdf')) {
+            // Extract text from PDF
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            for (let i = 1; i <= pdf.numPages; i++) {
+              const page = await pdf.getPage(i);
+              const textContent = await page.getTextContent();
+              text += textContent.items.map(item => item.str).join(' ') + '\n';
+            }
+          } else {
+            // Plain text file (.txt, .md, etc.)
+            text = file.text ? await file.text() : await new Promise((res, rej) => {
+              const reader = new FileReader();
+              reader.onload = () => res(reader.result);
+              reader.onerror = rej;
+              reader.readAsText(file);
+            });
+          }
+          docText.value = text;
+          docText.focus();
+        } catch (err) {
+          console.error('File read error', err);
+          alert('Failed to read file. Ensure it is a valid .txt, .md, or .pdf file.');
+        } finally {
+          fileUpload.value = '';
+        }
+      };
+    }
 
     generateBtn.onclick = async () => {
       const text = docText.value.trim();
@@ -159,10 +216,18 @@
         const baseUrl = (backendUrlInput && backendUrlInput.value ? backendUrlInput.value : 'http://localhost:3000').replace(/\/+$/,'');
         const endpoint = `${baseUrl}/api/generate-flashcards`;
 
+        // read and clamp requested number of questions
+        let requested = 5;
+        try {
+          requested = parseInt(numQuestionsInput && numQuestionsInput.value, 10) || 5;
+        } catch (e) { requested = 5; }
+        if (requested < 1) requested = 1;
+        if (requested > 25) requested = 25;
+
         const res = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ document: text })
+          body: JSON.stringify({ document: text, count: requested })
         });
         
         if (!res.ok) {
@@ -197,6 +262,44 @@
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
     }
+    // Drag & drop support: accept files (text) or plain text drops
+    (function() {
+      if (!dropZone) return;
+      const onDragOver = (e) => { e.preventDefault(); e.stopPropagation(); dropZone.classList.add('drop-target'); };
+      const onDragLeave = (e) => { e.preventDefault(); e.stopPropagation(); dropZone.classList.remove('drop-target'); };
+      const onDrop = async (e) => {
+        e.preventDefault(); e.stopPropagation(); dropZone.classList.remove('drop-target');
+        const dt = e.dataTransfer;
+        if (!dt) return;
+
+        try {
+          if (dt.files && dt.files.length > 0) {
+            const file = dt.files[0];
+            // Only attempt to read as text
+            const text = await (file.text ? file.text() : new Promise((res, rej) => {
+              const reader = new FileReader();
+              reader.onload = () => res(reader.result);
+              reader.onerror = rej;
+              reader.readAsText(file);
+            }));
+            docText.value = text;
+            docText.focus();
+            return;
+          }
+
+          const plain = dt.getData && dt.getData('text/plain');
+          if (plain) {
+            docText.value = plain;
+            docText.focus();
+          }
+        } catch (err) {
+          console.error('Drop read error', err);
+        }
+      };
+
+      ['dragenter','dragover'].forEach(n => dropZone.addEventListener(n, onDragOver));
+      ['dragleave','dragexit','drop'].forEach(n => dropZone.addEventListener(n, n === 'drop' ? onDrop : onDragLeave));
+    })();
     function renderCards(cards) {
       if (!cards.length) {
         cardsContainer.innerHTML = '<div class="card">No flashcards generated. Try with more detailed content.</div>';
@@ -209,23 +312,32 @@
         div.innerHTML = `
           <div><strong>Q${idx+1}:</strong> ${card.question}</div>
           <div class="options"></div>
-          <div class="answer">Correct answer: ${card.correct}</div>
+          <div class="answer" style="display:none;">Correct answer: ${card.correct}</div>
+          <button class="revealBtn" style="margin-top:10px;padding:8px 12px;border-radius:8px;border:1px solid #ddd;background:#fff;cursor:pointer;">Reveal Answer</button>
         `;
         const optionsDiv = div.querySelector('.options');
         card.options.forEach(opt => {
           const btn = document.createElement('button');
           btn.textContent = opt;
           btn.onclick = () => {
-            // Disable all buttons after one is clicked
-            optionsDiv.querySelectorAll('button').forEach(b => b.disabled = true);
-            
-            if (opt === card.correct) {
+            const allBtns = Array.from(optionsDiv.querySelectorAll('button'));
+            // Disable all buttons and remove previous markers
+            allBtns.forEach(b => {
+              b.disabled = true;
+              b.classList.remove('correct', 'wrong');
+            });
+
+            const normalize = s => String(s || '').trim().toLowerCase();
+            const chosen = normalize(opt);
+            const correct = normalize(card.correct);
+
+            if (chosen === correct) {
               btn.classList.add('correct');
             } else {
               btn.classList.add('wrong');
-              // Also highlight the correct answer
-              optionsDiv.querySelectorAll('button').forEach(b => {
-                if (b.textContent === card.correct) {
+              // Highlight the correct answer button (if present)
+              allBtns.forEach(b => {
+                if (normalize(b.textContent) === correct) {
                   b.classList.add('correct');
                 }
               });
@@ -233,6 +345,18 @@
           };
           optionsDiv.appendChild(btn);
         });
+        // wire up reveal button
+        const revealBtn = div.querySelector('.revealBtn');
+        const answerDiv = div.querySelector('.answer');
+        if (revealBtn && answerDiv) {
+          revealBtn.onclick = () => {
+            answerDiv.style.display = 'block';
+            revealBtn.disabled = true;
+            revealBtn.style.opacity = '0.6';
+            revealBtn.style.cursor = 'not-allowed';
+          };
+        }
+
         cardsContainer.appendChild(div);
       });
     }
