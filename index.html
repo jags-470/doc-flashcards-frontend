@@ -127,6 +127,11 @@
     <h1>📚 Document Flashcards Generator</h1>
     
     <textarea id="docText" rows="10" placeholder="Paste your document text here..."></textarea>
+    <div style="margin:10px 0 0 0;">
+      <label for="backendUrl" style="display:block;font-size:13px;margin-bottom:6px;color:#444;">Backend URL (include protocol and port):</label>
+      <input id="backendUrl" type="text" value="http://localhost:3000" style="width:100%;padding:10px;border:2px solid #ddd;border-radius:8px;font-size:14px;" />
+      <div style="font-size:12px;color:#666;margin-top:6px">Use the backend base URL (e.g. http://localhost:3000). If using Live Server, enable CORS on the backend.</div>
+    </div>
     <button id="generateBtn">Generate Q&A Flashcards</button>
 
     <h2>Flashcards</h2>
@@ -136,6 +141,7 @@
   <script>
     const generateBtn = document.getElementById('generateBtn');
     const docText = document.getElementById('docText');
+    const backendUrlInput = document.getElementById('backendUrl');
     const cardsContainer = document.getElementById('cardsContainer');
 
     generateBtn.onclick = async () => {
@@ -150,27 +156,47 @@
       cardsContainer.innerHTML = '<div class="loading">🤖 AI is generating your flashcards...</div>';
 
       try {
-        const res = await fetch('http://localhost:3000/api/generate-flashcards', {
+        const baseUrl = (backendUrlInput && backendUrlInput.value ? backendUrlInput.value : 'http://localhost:3000').replace(/\/+$/,'');
+        const endpoint = `${baseUrl}/api/generate-flashcards`;
+
+        const res = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ document: text })
         });
         
         if (!res.ok) {
-          throw new Error('Failed to generate flashcards');
+          let bodyText = '';
+          try { bodyText = await res.text(); } catch (e) { bodyText = ''; }
+          let msg = `Request failed: ${res.status} ${res.statusText}` + (bodyText ? ` — ${bodyText}` : '');
+          throw new Error(msg);
         }
-        
+
         const data = await res.json();
         renderCards(data.flashcards || []);
       } catch (e) {
         console.error(e);
-        cardsContainer.innerHTML = '<div class="card" style="border-color: #f44336;">❌ Error generating flashcards. Please check your backend URL and try again.</div>';
+        const message = (e && e.message) ? e.message : String(e);
+        const safeMsg = escapeHtml(message);
+        const hint = message.includes('Failed to execute') || message.includes('Failed to fetch')
+          ? 'Browser prevented the request. Check CORS or that the URL/protocol is correct.'
+          : 'Ensure backend accepts POST at /api/generate-flashcards and has CORS enabled.';
+
+        cardsContainer.innerHTML = `<div class="card" style="border-color: #f44336;"><strong>❌ Error</strong><div style="margin-top:8px;color:#333;">${safeMsg}</div><div style="margin-top:8px;font-size:13px;color:#666;">Hint: ${escapeHtml(hint)}</div></div>`;
       } finally {
         generateBtn.disabled = false;
         generateBtn.textContent = 'Generate Q&A Flashcards';
       }
     };
 
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
     function renderCards(cards) {
       if (!cards.length) {
         cardsContainer.innerHTML = '<div class="card">No flashcards generated. Try with more detailed content.</div>';
